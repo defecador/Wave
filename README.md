@@ -92,7 +92,7 @@ and `i486` for the emulator (both without on-device playback for now).
 - [x] Now playing, play/pause, next/previous, seek, shuffle
 - [x] Choose the Spotify Connect device
 - [x] Play audio on the phone through librespot (aarch64)
-- [ ] Keep playing when Wave is closed
+- [x] Keep playing when Wave is closed
 - [ ] Lock screen and headset controls (MPRIS)
 - [ ] Browse library and playlists, search
 - [ ] librespot for armv7hl

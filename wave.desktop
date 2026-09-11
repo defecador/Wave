@@ -4,6 +4,10 @@ X-Nemo-Application-Type=silica-qt5
 Icon=wave
 Exec=wave
 Name=Wave
+# Wave can keep running without a window while it plays on the phone. The
+# launcher's single-instance check would only try to raise that missing window,
+# so let Wave hand the launch over to the running instance itself (AppService).
+X-Nemo-Single-Instance=no
 
 [X-Sailjail]
 # Must match setOrganizationName()/setApplicationName() in src/main.cpp.

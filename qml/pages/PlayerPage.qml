@@ -47,6 +47,13 @@ Page {
 
         PullDownMenu {
             MenuItem {
+                // Closing the window keeps Wave playing in the background while
+                // it plays on the phone, so offer a way to stop completely.
+                text: qsTr("Quit Wave")
+                visible: librespot.enabled
+                onClicked: Qt.quit()
+            }
+            MenuItem {
                 text: qsTr("Account")
                 onClicked: pageStack.push(Qt.resolvedUrl("AccountPage.qml"))
             }

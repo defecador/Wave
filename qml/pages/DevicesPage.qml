@@ -14,7 +14,7 @@ Page {
         case Librespot.NeedsLogin:
             return qsTr("Log in once so this phone can play Spotify")
         case Librespot.Running:
-            return qsTr("Ready. Listed below as \"%1\"").arg(librespot.deviceName)
+            return qsTr("Ready as \"%1\". Keeps playing after you close Wave").arg(librespot.deviceName)
         default:
             return librespot.lastError !== ""
                     ? librespot.lastError

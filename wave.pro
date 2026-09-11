@@ -7,9 +7,10 @@ CONFIG += sailfishapp c++11
 isEmpty(VERSION): VERSION = 0.1.0
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
-QT += network
+QT += dbus network
 
 SOURCES += \
+    src/appservice.cpp \
     src/librespotcontroller.cpp \
     src/main.cpp \
     src/settings.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
     src/spotifyplayer.cpp
 
 HEADERS += \
+    src/appservice.h \
     src/librespotcontroller.h \
     src/settings.h \
     src/spotifyauth.h \
