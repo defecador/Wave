@@ -1,0 +1,19 @@
+# Shadow builds (recommended: build from a build/ directory)
+/build*/
+.sfdk/
+
+# In-source build output
+Makefile
+.qmake.stash
+*.o
+moc_*.cpp
+moc_*.h
+moc_predefs.h
+qrc_*.cpp
+/wave
+/RPMS/
+/installroot/
+/documentation.list
+
+# IDE
+*.pro.user*

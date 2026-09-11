@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=wave
+Exec=wave
+Name=Wave
+
+[X-Sailjail]
+# Must match setOrganizationName()/setApplicationName() in src/main.cpp.
+OrganizationName=io.github.wave
+ApplicationName=wave
+Permissions=Internet;Audio
