@@ -14,14 +14,18 @@ SOURCES += \
     src/librespotcontroller.cpp \
     src/main.cpp \
     src/settings.cpp \
+    src/spotifyapi.cpp \
     src/spotifyauth.cpp \
+    src/spotifybrowser.cpp \
     src/spotifyplayer.cpp
 
 HEADERS += \
     src/appservice.h \
     src/librespotcontroller.h \
     src/settings.h \
+    src/spotifyapi.h \
     src/spotifyauth.h \
+    src/spotifybrowser.h \
     src/spotifyplayer.h
 
 DISTFILES += \
@@ -29,7 +33,9 @@ DISTFILES += \
     qml/cover/CoverPage.qml \
     qml/pages/AccountPage.qml \
     qml/pages/DevicesPage.qml \
+    qml/pages/LibraryPage.qml \
     qml/pages/PlayerPage.qml \
+    qml/pages/TrackListPage.qml \
     rpm/wave.spec \
     scripts/build-librespot.sh \
     wave.desktop

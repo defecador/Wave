@@ -25,7 +25,8 @@ namespace {
 const quint16 RedirectPort = 8898;
 const char *const RedirectPath = "/callback";
 const char *const Scopes =
-        "user-read-playback-state user-modify-playback-state user-read-currently-playing";
+        "user-read-playback-state user-modify-playback-state user-read-currently-playing "
+        "playlist-read-private playlist-read-collaborative user-library-read";
 
 QByteArray base64Url(const QByteArray &data)
 {
@@ -269,6 +270,17 @@ void SpotifyAuth::requestToken(const QList<QPair<QString, QString> > &params, bo
         const bool wasLoggedIn = loggedIn();
         m_accessToken = accessToken;
         m_expiresAt = QDateTime::currentDateTimeUtc().addSecs(json.value(QStringLiteral("expires_in")).toInt(3600));
+
+        // Spotify reports the scopes it actually granted. Logins made before Wave
+        // asked for library access keep working for playback only, so the user has
+        // to log in again to browse playlists and saved music.
+        const QString scopes = jsonString(json, "scope");
+        const bool libraryAccess = scopes.contains(QLatin1String("playlist-read-private"))
+                && scopes.contains(QLatin1String("user-library-read"));
+        if (libraryAccess != m_libraryAccess) {
+            m_libraryAccess = libraryAccess;
+            emit libraryAccessChanged();
+        }
 
         // Spotify may rotate the refresh token on every refresh.
         const QString refreshToken = jsonString(json, "refresh_token");

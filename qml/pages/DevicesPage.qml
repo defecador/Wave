@@ -71,13 +71,18 @@ Page {
 
         PullDownMenu {
             MenuItem {
+                text: qsTr("Account")
+                onClicked: pageStack.push(Qt.resolvedUrl("AccountPage.qml"))
+            }
+            MenuItem {
                 text: qsTr("Forget phone playback login")
                 visible: librespot.available
                 onClicked: librespot.logout()
             }
             MenuItem {
-                text: qsTr("Refresh")
-                onClicked: spotifyPlayer.refreshDevices()
+                text: qsTr("Now playing")
+                visible: spotifyAuth.loggedIn
+                onClicked: pageStack.push(Qt.resolvedUrl("PlayerPage.qml"))
             }
         }
 
@@ -95,7 +100,7 @@ Page {
             contentHeight: Theme.itemSizeMedium
             onClicked: {
                 spotifyPlayer.transferTo(modelData.id)
-                pageStack.pop()
+                pageStack.push(Qt.resolvedUrl("PlayerPage.qml"))
             }
 
             Column {

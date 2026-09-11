@@ -6,7 +6,7 @@ import Amber.Mpris 1.0
 import "pages"
 
 ApplicationWindow {
-    initialPage: Component { PlayerPage { } }
+    initialPage: Component { LibraryPage { } }
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
     _defaultPageOrientations: defaultAllowedOrientations

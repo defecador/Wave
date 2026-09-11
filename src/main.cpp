@@ -17,7 +17,9 @@
 
 #include "appservice.h"
 #include "librespotcontroller.h"
+#include "spotifyapi.h"
 #include "spotifyauth.h"
+#include "spotifybrowser.h"
 #include "spotifyplayer.h"
 
 namespace {
@@ -83,8 +85,14 @@ int main(int argc, char *argv[])
 
     QNetworkAccessManager nam;
     SpotifyAuth auth(&nam);
-    SpotifyPlayer player(&nam, &auth);
+    SpotifyApi api(&nam, &auth);
+    SpotifyPlayer player(&api, &auth);
+    SpotifyBrowser browser(&api);
     LibrespotController librespot;
+
+    // Request failures surface on whichever page is showing.
+    QObject::connect(&api, &SpotifyApi::errorOccurred, &player, &SpotifyPlayer::errorOccurred);
+
     QObject::connect(&librespot, &LibrespotController::readyToPlay, &player, [&player](const QString &name) {
         player.transferToDeviceNamed(name);
     });
@@ -95,6 +103,7 @@ int main(int argc, char *argv[])
     view->rootContext()->setContextProperty(QStringLiteral("appService"), &appService);
     view->rootContext()->setContextProperty(QStringLiteral("spotifyAuth"), &auth);
     view->rootContext()->setContextProperty(QStringLiteral("spotifyPlayer"), &player);
+    view->rootContext()->setContextProperty(QStringLiteral("spotifyBrowser"), &browser);
     view->rootContext()->setContextProperty(QStringLiteral("librespot"), &librespot);
     view->setSource(SailfishApp::pathToMainQml());
     view->show();

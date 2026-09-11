@@ -78,7 +78,7 @@ Page {
         ViewPlaceholder {
             enabled: spotifyAuth.loggedIn && !spotifyPlayer.active
             text: qsTr("Nothing playing")
-            hintText: qsTr("Pull down and open Devices to play on this phone or another device")
+            hintText: qsTr("Go back to your library to pick something, or pull down to open Devices")
         }
 
         Column {

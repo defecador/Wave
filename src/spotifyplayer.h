@@ -4,17 +4,14 @@
 #define SPOTIFYPLAYER_H
 
 #include <QByteArray>
-#include <QDateTime>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QTimer>
 #include <QVariantList>
 
-#include <functional>
-
 class QJsonObject;
-class QNetworkAccessManager;
-class QNetworkReply;
+class SpotifyApi;
 class SpotifyAuth;
 
 // Controls Spotify Connect playback through the Web API. Audio is played by
@@ -38,7 +35,7 @@ class SpotifyPlayer : public QObject
     Q_PROPERTY(QVariantList devices READ devices NOTIFY devicesChanged)
 
 public:
-    explicit SpotifyPlayer(QNetworkAccessManager *nam, SpotifyAuth *auth, QObject *parent = nullptr);
+    explicit SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent = nullptr);
 
     bool polling() const { return m_pollTimer.isActive(); }
     void setPolling(bool polling);
@@ -69,6 +66,10 @@ public:
     Q_INVOKABLE void transferTo(const QString &deviceId);
     // Waits for a device to appear in the device list, then moves playback to it.
     Q_INVOKABLE void transferToDeviceNamed(const QString &name, int attempts = 5);
+    // Plays a playlist or album, optionally starting at one of its tracks.
+    Q_INVOKABLE void playContext(const QString &contextUri, const QString &trackUri = QString());
+    // Plays loose tracks, e.g. liked songs or search results.
+    Q_INVOKABLE void playTracks(const QStringList &trackUris, const QString &startUri = QString());
 
 signals:
     void pollingChanged();
@@ -78,18 +79,13 @@ signals:
     void errorOccurred(const QString &message);
 
 private:
-    typedef std::function<void(int status, const QByteArray &data)> Callback;
-
-    void send(const QByteArray &verb, const QString &path, const QByteArray &body, Callback done);
     void command(const QByteArray &verb, const QString &path, const QByteArray &body = QByteArray());
-    void handleReply(QNetworkReply *reply, const Callback &done);
     void applyState(const QJsonObject &state);
     void applyDevices(const QByteArray &data);
 
-    QNetworkAccessManager *m_nam;
+    SpotifyApi *m_api;
     SpotifyAuth *m_auth;
     QTimer m_pollTimer;
-    QDateTime m_rateLimitedUntil;
 
     bool m_active;
     bool m_playing;

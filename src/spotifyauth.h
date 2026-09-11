@@ -24,6 +24,7 @@ class SpotifyAuth : public QObject
     Q_OBJECT
     Q_PROPERTY(QString clientId READ clientId WRITE setClientId NOTIFY clientIdChanged)
     Q_PROPERTY(bool loggedIn READ loggedIn NOTIFY loggedInChanged)
+    Q_PROPERTY(bool libraryAccess READ libraryAccess NOTIFY libraryAccessChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
     Q_PROPERTY(QString redirectUri READ redirectUri CONSTANT)
     Q_PROPERTY(QString authorizeUrl READ authorizeUrl NOTIFY authorizeUrlChanged)
@@ -34,6 +35,9 @@ public:
     QString clientId() const { return m_clientId; }
     void setClientId(const QString &clientId);
     bool loggedIn() const { return !m_refreshToken.isEmpty(); }
+    // Whether Spotify granted the playlist and saved music scopes. A login made
+    // before Wave asked for them keeps working for playback only.
+    bool libraryAccess() const { return m_libraryAccess; }
     bool busy() const { return m_busy; }
     QString redirectUri() const;
     QString authorizeUrl() const { return m_authorizeUrl; }
@@ -52,6 +56,7 @@ public:
 signals:
     void clientIdChanged();
     void loggedInChanged();
+    void libraryAccessChanged();
     void busyChanged();
     void authorizeUrlChanged();
     void loginFailed(const QString &message);
@@ -72,6 +77,7 @@ private:
     QByteArray m_verifier;
     QByteArray m_state;
     QString m_authorizeUrl;
+    bool m_libraryAccess = false;
     bool m_busy;
     QList<std::function<void(const QString &)> > m_pending;
 };

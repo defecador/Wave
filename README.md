@@ -2,10 +2,11 @@
 
 An unofficial Spotify client for Sailfish OS.
 
-> **Status: early development.** Wave shows what is playing and controls
-> Spotify Connect playback. On aarch64 phones it can also play Spotify on the
-> phone itself through a bundled [librespot](https://github.com/librespot-org/librespot),
-> without Android App Support.
+> **Status: early development.** Wave browses your playlists, saved albums and
+> liked songs, searches Spotify, and controls Spotify Connect playback. On
+> aarch64 phones it can also play Spotify on the phone itself through a bundled
+> [librespot](https://github.com/librespot-org/librespot), without Android App
+> Support.
 
 Wave is not affiliated with, endorsed by, or sponsored by Spotify.
 Spotify is a trademark of Spotify AB. librespot is an unofficial Spotify client,
@@ -36,6 +37,13 @@ have Premium, which Wave needs anyway.
 5. Approve access in the browser. It hands the login back to Wave. If the
    browser shows an error page instead, copy that page's address and paste it
    into Wave.
+
+Wave opens on your library. Use its pull-down menu for Devices, the player and
+your account.
+
+> **Upgrading from an older Wave?** Log out and log in again in **Account**.
+> Reading playlists and saved music needs permissions that older logins do not
+> have, and the library page says so when they are missing.
 
 ### Playing on the phone
 
@@ -78,8 +86,13 @@ and `i486` for the emulator (both without on-device playback for now).
 | Path | Purpose |
 | --- | --- |
 | `src/spotifyauth.*` | Login (authorization code flow with PKCE), token refresh and storage |
+| `src/spotifyapi.*` | Authorized Web API requests, rate limiting and error reporting |
 | `src/spotifyplayer.*` | Playback state and Spotify Connect commands through the Web API |
+| `src/spotifybrowser.*` | Playlists, saved albums, liked songs and search |
 | `src/librespotcontroller.*` | Runs librespot as the on-device Spotify Connect receiver |
+| `src/appservice.*` | Single instance and window activation over D-Bus |
+| `qml/pages/LibraryPage.qml` | Library and search; the page Wave opens on |
+| `qml/pages/TrackListPage.qml` | Songs of a playlist, album or liked songs |
 | `qml/pages/PlayerPage.qml` | Now playing and playback controls |
 | `qml/pages/AccountPage.qml` | Client ID setup and login |
 | `qml/pages/DevicesPage.qml` | Play on this phone, and choosing the Spotify Connect device |
@@ -94,7 +107,8 @@ and `i486` for the emulator (both without on-device playback for now).
 - [x] Play audio on the phone through librespot (aarch64)
 - [x] Keep playing when Wave is closed
 - [x] Lock screen and headset controls (MPRIS)
-- [ ] Browse library and playlists, search
+- [x] Browse library and playlists, search (first 50 items per list; Spotify
+      returns at most 10 search results of each kind in development mode)
 - [ ] librespot for armv7hl
 - [ ] Store tokens in Sailfish Secrets. For now, the refresh token is kept in
       `~/.config/io.github.wave/wave/wave.conf`, readable by your user.
