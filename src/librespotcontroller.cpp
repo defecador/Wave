@@ -174,6 +174,9 @@ void LibrespotController::onReadyRead()
                 m_claimPending = false;
                 emit readyToPlay(deviceName());
             }
+        } else if (line.contains(QLatin1String(" ms) loaded"))) {
+            // "<Track name> (215000 ms) loaded"
+            emit trackLoaded();
         } else if (line.contains(QLatin1String(" ERROR "))) {
             // Log lines look like "[2026-09-11T20:00:00Z ERROR librespot] message".
             const int end = line.indexOf(QLatin1String("] "));

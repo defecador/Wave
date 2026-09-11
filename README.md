@@ -93,7 +93,7 @@ and `i486` for the emulator (both without on-device playback for now).
 - [x] Choose the Spotify Connect device
 - [x] Play audio on the phone through librespot (aarch64)
 - [x] Keep playing when Wave is closed
-- [ ] Lock screen and headset controls (MPRIS)
+- [x] Lock screen and headset controls (MPRIS)
 - [ ] Browse library and playlists, search
 - [ ] librespot for armv7hl
 - [ ] Store tokens in Sailfish Secrets. For now, the refresh token is kept in

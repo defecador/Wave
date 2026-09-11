@@ -5,6 +5,7 @@ Release:    1
 License:    GPL-3.0-or-later
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   sailfishsilica-qt5 >= 0.10.9
+Requires:   amber-qml-plugin-mpris
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)

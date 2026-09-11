@@ -52,6 +52,8 @@ signals:
     void lastErrorChanged();
     // The receiver is logged in after the user turned it on; playback can move to it.
     void readyToPlay(const QString &deviceName);
+    // The receiver started loading a track, so Spotify's playback state changed.
+    void trackLoaded();
 
 private:
     void start();

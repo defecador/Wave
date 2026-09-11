@@ -88,8 +88,11 @@ int main(int argc, char *argv[])
     QObject::connect(&librespot, &LibrespotController::readyToPlay, &player, [&player](const QString &name) {
         player.transferToDeviceNamed(name);
     });
+    // librespot logs every track it loads; refresh right away instead of waiting for the next poll.
+    QObject::connect(&librespot, &LibrespotController::trackLoaded, &player, &SpotifyPlayer::refresh);
 
     QScopedPointer<QQuickView> view(SailfishApp::createView());
+    view->rootContext()->setContextProperty(QStringLiteral("appService"), &appService);
     view->rootContext()->setContextProperty(QStringLiteral("spotifyAuth"), &auth);
     view->rootContext()->setContextProperty(QStringLiteral("spotifyPlayer"), &player);
     view->rootContext()->setContextProperty(QStringLiteral("librespot"), &librespot);
@@ -110,10 +113,13 @@ int main(int argc, char *argv[])
     QObject::connect(&librespot, &LibrespotController::stateChanged, app.data(), quitIfIdle);
     QObject::connect(view->engine(), &QQmlEngine::quit, app.data(), &QGuiApplication::quit);
 
-    // No need to poll Spotify's playback state while there is no window.
-    QObject::connect(view.data(), &QWindow::visibleChanged, &player, [&player, &auth](bool visible) {
-        player.setPolling(visible && auth.loggedIn());
-    });
+    // Without a window, only keep polling while Wave plays on the phone, so the
+    // lock screen controls stay up to date.
+    const auto updatePolling = [&view, &player, &auth, &librespot]() {
+        player.setPolling(auth.loggedIn() && (view->isVisible() || librespot.enabled()));
+    };
+    QObject::connect(view.data(), &QWindow::visibleChanged, &player, updatePolling);
+    QObject::connect(&librespot, &LibrespotController::enabledChanged, &player, updatePolling);
 
     QObject::connect(&appService, &AppService::activateRequested, view.data(), [&view]() {
         view->show();
