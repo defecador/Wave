@@ -31,6 +31,7 @@ HEADERS += \
 DISTFILES += \
     qml/wave.qml \
     qml/cover/CoverPage.qml \
+    qml/pages/AboutPage.qml \
     qml/pages/AccountPage.qml \
     qml/pages/DevicesPage.qml \
     qml/pages/LibraryPage.qml \
