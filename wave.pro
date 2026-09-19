@@ -4,7 +4,7 @@ TARGET = wave
 
 CONFIG += sailfishapp c++11
 
-isEmpty(VERSION): VERSION = 0.2.0
+isEmpty(VERSION): VERSION = 0.2.1
 
 # The version reaches the code through a generated header rather than a define,
 # so that changing it recompiles what uses it. A define lives in the Makefile,

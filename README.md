@@ -1,6 +1,7 @@
 # Wave
 
 An unofficial Spotify client for Sailfish OS.
+Source code: [github.com/defecador/Wave](https://github.com/defecador/Wave)
 
 > **Status: early development.** Wave browses your playlists, saved albums and
 > liked songs, searches Spotify, and controls Spotify Connect playback. It can
@@ -149,6 +150,13 @@ and `i486` for the emulator, which has no on-device playback.
   for Sailfish OS that proved this approach
 - [librespot](https://github.com/librespot-org/librespot), the open source
   Spotify Connect client
+
+## Author
+
+Guillermo Torres — [github.com/defecador](https://github.com/defecador)
+
+Wave is free and always will be. If it is useful to you, you can buy its author
+a coffee at [ko-fi.com/gallerman73107](https://ko-fi.com/gallerman73107).
 
 ## License
 

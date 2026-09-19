@@ -82,6 +82,51 @@ Page {
                 color: Theme.highlightColor
             }
 
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                text: qsTr("Source code, bug reports and translations:")
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.secondaryHighlightColor
+                wrapMode: Text.Wrap
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                text: "<a href=\"https://github.com/defecador/Wave\">github.com/defecador/Wave</a>"
+                textFormat: Text.RichText
+                font.pixelSize: Theme.fontSizeSmall
+                linkColor: Theme.primaryColor
+                wrapMode: Text.Wrap
+                onLinkActivated: Qt.openUrlExternally(link)
+            }
+
+            SectionHeader {
+                text: qsTr("Support Wave")
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                text: qsTr("Wave is free and always will be. If it is useful to you, you can buy "
+                           + "its author a coffee:")
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.secondaryHighlightColor
+                wrapMode: Text.Wrap
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                text: "<a href=\"https://ko-fi.com/gallerman73107\">ko-fi.com/gallerman73107</a>"
+                textFormat: Text.RichText
+                font.pixelSize: Theme.fontSizeSmall
+                linkColor: Theme.primaryColor
+                wrapMode: Text.Wrap
+                onLinkActivated: Qt.openUrlExternally(link)
+            }
+
             SectionHeader {
                 text: qsTr("License")
             }
