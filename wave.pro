@@ -4,7 +4,7 @@ TARGET = wave
 
 CONFIG += sailfishapp c++11
 
-isEmpty(VERSION): VERSION = 0.1.0
+isEmpty(VERSION): VERSION = 0.2.0
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 
 QT += dbus network

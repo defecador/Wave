@@ -151,12 +151,17 @@ Page {
 
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    icon.source: spotifyPlayer.saved ? "image://theme/icon-m-favorite-selected"
-                                                     : "image://theme/icon-m-favorite"
-                    // Liking needs a permission older logins do not have.
-                    enabled: spotifyPlayer.savable && spotifyAuth.libraryWrite
+                    icon.source: spotifyPlayer.saved ? "image://theme/icon-m-like"
+                                                     : "image://theme/icon-m-outline-like"
+                    enabled: spotifyPlayer.savable
                     opacity: enabled ? 1.0 : 0.4
-                    onClicked: spotifyPlayer.toggleSaved()
+                    onClicked: {
+                        // Liking needs a permission older logins do not have.
+                        if (spotifyAuth.libraryWrite)
+                            spotifyPlayer.toggleSaved()
+                        else
+                            errorLabel.show(qsTr("Log out and log in again in Account to like songs"))
+                    }
                 }
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter

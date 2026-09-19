@@ -3,6 +3,7 @@
 #include "spotifyapi.h"
 #include "spotifyauth.h"
 
+#include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -79,6 +80,8 @@ void SpotifyApi::handleReply(QNetworkReply *reply, const Callback &done)
         // Spotify errors look like {"error": {"status": 404, "message": "...", "reason": "..."}}
         const QString message = QJsonDocument::fromJson(data).object()
                 .value("error").toObject().value("message").toString();
+        qWarning() << "Spotify refused" << reply->request().url().path()
+                   << "with" << status << (message.isEmpty() ? reply->errorString() : message);
         emit errorOccurred(message.isEmpty() ? reply->errorString() : message);
     }
 

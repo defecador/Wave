@@ -67,7 +67,7 @@ CoverBackground {
 
             Image {
                 anchors.verticalCenter: parent.verticalCenter
-                source: "image://theme/icon-s-favorite?" + Theme.highlightColor
+                source: "image://theme/icon-s-like?" + Theme.highlightColor
             }
 
             Label {
@@ -130,7 +130,9 @@ CoverBackground {
         }
 
         CoverAction {
-            iconSource: cover.canLike ? "image://theme/icon-cover-favorite"
+            // The theme's cover "favorite" icon is a star, so the heart comes
+            // from the like icons, which are the same 48px as the cover set.
+            iconSource: cover.canLike ? "image://theme/icon-s-like"
                                       : "image://theme/icon-cover-cancel"
             onTriggered: {
                 if (!cover.canLike) {

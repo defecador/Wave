@@ -14,6 +14,13 @@ namespace {
 // Spotify reports the new playback state a moment after a command succeeds.
 const int CommandSettleMs = 700;
 
+// Since February 2026 the library endpoints take Spotify URIs rather than ids,
+// and one /me/library replaces the per-type paths such as /me/tracks.
+QString libraryQuery(const QString &trackId)
+{
+    return QStringLiteral("?uris=spotify%3Atrack%3A") + trackId;
+}
+
 } // namespace
 
 SpotifyPlayer::SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent)
@@ -27,6 +34,10 @@ SpotifyPlayer::SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent
     , m_shuffle(false)
     , m_saved(false)
 {
+    // A login made before Wave asked for user-library-modify cannot tell
+    // whether a song is liked, so ask again once the permission arrives.
+    connect(m_auth, &SpotifyAuth::libraryWriteChanged, this, &SpotifyPlayer::checkSaved);
+
     m_pollTimer.setInterval(5000);
     connect(&m_pollTimer, &QTimer::timeout, this, &SpotifyPlayer::refresh);
 
@@ -256,7 +267,7 @@ void SpotifyPlayer::toggleSaved()
     // Show the new state at once; Spotify is told in the background.
     setSaved(wanted);
     m_api->send(wanted ? "PUT" : "DELETE",
-                QStringLiteral("/me/tracks?ids=%1").arg(id), QByteArray(),
+                QStringLiteral("/me/library") + libraryQuery(id), QByteArray(),
                 [this, id, wanted](int status, const QByteArray &) {
         if (status == 200 || status == 204)
             return;
@@ -271,7 +282,7 @@ void SpotifyPlayer::checkSaved()
         return;
 
     const QString id = m_trackId;
-    m_api->get(QStringLiteral("/me/tracks/contains?ids=%1").arg(id),
+    m_api->get(QStringLiteral("/me/library/contains") + libraryQuery(id),
                [this, id](int status, const QByteArray &data) {
         if (status != 200 || id != m_trackId)
             return;
