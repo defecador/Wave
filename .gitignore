@@ -17,3 +17,6 @@ qrc_*.cpp
 
 # IDE
 *.pro.user*
+
+# Generated from VERSION by wave.pro
+appversion.h

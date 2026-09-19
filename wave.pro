@@ -5,7 +5,16 @@ TARGET = wave
 CONFIG += sailfishapp c++11
 
 isEmpty(VERSION): VERSION = 0.2.0
-DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+
+# The version reaches the code through a generated header rather than a define,
+# so that changing it recompiles what uses it. A define lives in the Makefile,
+# which object files do not depend on, so a bumped version would go unnoticed.
+# qmake treats # as a comment and cannot quote ", hence LITERAL_HASH and the
+# raw version, which main.cpp turns into a string.
+APP_VERSION_HEADER = $$OUT_PWD/appversion.h
+APP_VERSION_CONTENT = "$${LITERAL_HASH}define APP_VERSION_RAW $$VERSION"
+write_file($$APP_VERSION_HEADER, APP_VERSION_CONTENT)|error("Cannot write $$APP_VERSION_HEADER")
+INCLUDEPATH += $$OUT_PWD
 
 QT += dbus network
 
