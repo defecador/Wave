@@ -52,7 +52,12 @@ void SpotifyApi::send(const QByteArray &verb, const QString &path, const QByteAr
                 request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
             // Spotify answers 411 to body-less PUT/POST requests without an explicit length.
             request.setHeader(QNetworkRequest::ContentLengthHeader, body.size());
-            reply = verb == "PUT" ? m_nam->put(request, body) : m_nam->post(request, body);
+            if (verb == "PUT")
+                reply = m_nam->put(request, body);
+            else if (verb == "DELETE")
+                reply = m_nam->deleteResource(request); // Wave never sends a body with one.
+            else
+                reply = m_nam->post(request, body);
         }
 
         connect(reply, &QNetworkReply::finished, this, [this, reply, done]() {
