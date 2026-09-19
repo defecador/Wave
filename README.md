@@ -3,10 +3,10 @@
 An unofficial Spotify client for Sailfish OS.
 
 > **Status: early development.** Wave browses your playlists, saved albums and
-> liked songs, searches Spotify, and controls Spotify Connect playback. On
-> aarch64 phones it can also play Spotify on the phone itself through a bundled
+> liked songs, searches Spotify, and controls Spotify Connect playback. It can
+> also play Spotify on the phone itself through a bundled
 > [librespot](https://github.com/librespot-org/librespot), without Android App
-> Support.
+> Support, on both aarch64 and armv7hl.
 
 Wave is not affiliated with, endorsed by, or sponsored by Spotify.
 Spotify is a trademark of Spotify AB. librespot is an unofficial Spotify client,
@@ -41,9 +41,30 @@ have Premium, which Wave needs anyway.
 Wave opens on your library. Use its pull-down menu for Devices, the player and
 your account.
 
+### Discover Weekly and other Spotify playlists
+
+Spotify does not let apps read the playlists it makes itself, and its "Made for
+you" playlists are not in the API at all. To reach Discover Weekly, Release
+Radar or a daily mix, copy its link in the Spotify app (three dots ▸ Share ▸
+Copy link) and add it in Wave with **Add playlist by link**. Wave cannot list
+their songs, but it plays them, and the link keeps working as they change.
+
+Playlists made by other people appear under **Followed lists**. Tapping one
+plays it; press and hold to try to see its songs.
+
 > **Upgrading from an older Wave?** Log out and log in again in **Account**.
-> Reading playlists and saved music needs permissions that older logins do not
-> have, and the library page says so when they are missing.
+> Reading playlists and saved music, and liking songs, need permissions that
+> older logins do not have, and Wave says so where they are missing.
+
+### The app cover
+
+A Sailfish cover has room for two actions, so each one does a second thing when
+tapped twice, and a line above them says which:
+
+| | Tap | Double tap |
+| --- | --- | --- |
+| Left | Move playback to this phone, or play/pause once it plays here | Next song |
+| Right | Like this song, or quit when there is nothing to like | Quit Wave |
 
 ### Playing on the phone
 
@@ -57,15 +78,24 @@ your account.
 
 Wave is built with the [Sailfish SDK](https://docs.sailfishos.org/Tools/Sailfish_SDK/).
 
-### librespot (optional, aarch64)
+### librespot (optional)
 
 The SDK's Rust is too old for librespot 0.8, so librespot is cross-built with
 Rust from [rustup](https://rustup.rs) on the host. The SDK engine only does the
 C compiling and linking:
 
 ```bash
-rustup target add aarch64-unknown-linux-gnu && scripts/build-librespot.sh
+rustup target add aarch64-unknown-linux-gnu && scripts/build-librespot.sh aarch64
 ```
+
+For 32-bit devices:
+
+```bash
+rustup target add armv7-unknown-linux-gnueabihf && scripts/build-librespot.sh armv7hl
+```
+
+If `sfdk` cannot reach the build engine (a Docker engine your user may not talk
+to, for instance), set `ENGINE_SSH=1` and the script goes in over SSH instead.
 
 The Wave build picks the binary up from `build/deps/` automatically. Without it,
 Wave is built as a remote control only.
@@ -78,8 +108,8 @@ Use a separate build directory:
 mkdir -p build && cd build && sfdk -c target=SailfishOS-5.1.0.11-aarch64 build ..
 ```
 
-The RPM ends up in `build/RPMS/`. Use the `armv7hl` target for 32-bit devices
-and `i486` for the emulator (both without on-device playback for now).
+The RPM ends up in `build/RPMS/`. Use the `armv7hl` target for 32-bit devices,
+and `i486` for the emulator, which has no on-device playback.
 
 ## Project layout
 
@@ -95,21 +125,21 @@ and `i486` for the emulator (both without on-device playback for now).
 | `qml/pages/TrackListPage.qml` | Songs of a playlist, album or liked songs |
 | `qml/pages/PlayerPage.qml` | Now playing and playback controls |
 | `qml/pages/AccountPage.qml` | Client ID setup and login |
+| `qml/pages/AddPlaylistDialog.qml` | Adding a playlist Spotify's API does not list |
 | `qml/pages/DevicesPage.qml` | Play on this phone, and choosing the Spotify Connect device |
 | `qml/cover/CoverPage.qml` | App cover with play/pause and next actions |
-| `scripts/build-librespot.sh` | Cross-builds librespot for Sailfish OS aarch64 |
+| `scripts/build-librespot.sh` | Cross-builds librespot for Sailfish OS aarch64 and armv7hl |
 
 ## Roadmap
 
 - [x] Log in with PKCE (no client secret)
 - [x] Now playing, play/pause, next/previous, seek, shuffle
 - [x] Choose the Spotify Connect device
-- [x] Play audio on the phone through librespot (aarch64)
+- [x] Play audio on the phone through librespot (aarch64 and armv7hl)
 - [x] Keep playing when Wave is closed
 - [x] Lock screen and headset controls (MPRIS)
 - [x] Browse library and playlists, search (first 50 items per list; Spotify
       returns at most 10 search results of each kind in development mode)
-- [ ] librespot for armv7hl
 - [ ] Store tokens in Sailfish Secrets. For now, the refresh token is kept in
       `~/.config/io.github.wave/wave/wave.conf`, readable by your user.
 

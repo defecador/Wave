@@ -2,10 +2,13 @@
 
 #include "spotifybrowser.h"
 #include "spotifyapi.h"
+#include "settings.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
+#include <QSettings>
 #include <QUrlQuery>
 #include <QVariantMap>
 
@@ -104,6 +107,41 @@ QVariantList tracksFrom(const QJsonArray &entries, bool nested, const QString &i
     return tracks;
 }
 
+// Spotify keeps its own playlists (Discover Weekly, Release Radar, the daily
+// mixes and the editorial charts) out of reach of apps in development mode:
+// /me/playlists still lists them, but reading their songs answers 404. They can
+// still be played as a whole, so say so instead of showing an empty list.
+QString listError(int status, bool playable)
+{
+    if (status == 0)
+        return QObject::tr("Could not reach Spotify");
+    if (status == 403 || status == 404) {
+        return playable
+                ? QObject::tr("Spotify does not let apps read this list. Playlists made by "
+                              "Spotify, such as Discover Weekly or the daily mixes, are private "
+                              "to Spotify's own apps. Pull down to play it anyway.")
+                : QObject::tr("Spotify does not let apps read this list.");
+    }
+    return QObject::tr("Spotify could not be read (error %1)").arg(status);
+}
+
+// Accepts https://open.spotify.com/playlist/<id>?si=..., spotify:playlist:<id>
+// and a bare id, which is what people end up pasting from the Spotify app.
+QString playlistIdFromLink(const QString &link)
+{
+    const QString text = link.trimmed();
+    if (text.isEmpty())
+        return QString();
+
+    QRegularExpression inLink(QStringLiteral("playlist[:/]([A-Za-z0-9]+)"));
+    const QRegularExpressionMatch match = inLink.match(text);
+    if (match.hasMatch())
+        return match.captured(1);
+
+    QRegularExpression bareId(QStringLiteral("\\A[A-Za-z0-9]{16,}\\z"));
+    return bareId.match(text).hasMatch() ? text : QString();
+}
+
 } // namespace
 
 SpotifyBrowser::SpotifyBrowser(SpotifyApi *api, QObject *parent)
@@ -111,22 +149,46 @@ SpotifyBrowser::SpotifyBrowser(SpotifyApi *api, QObject *parent)
     , m_api(api)
     , m_busy(false)
 {
+    loadAddedPlaylists();
 }
 
 void SpotifyBrowser::refreshHome()
 {
     setBusy(true);
+    if (m_userId.isEmpty()) {
+        // Needed to tell your own playlists from the ones you follow.
+        m_api->get(QStringLiteral("/me"), [this](int status, const QByteArray &data) {
+            if (status == 200)
+                m_userId = QJsonDocument::fromJson(data).object().value("id").toString();
+            loadHome();
+        });
+        return;
+    }
+    loadHome();
+}
+
+void SpotifyBrowser::loadHome()
+{
     m_api->get(QStringLiteral("/me/playlists?limit=%1").arg(ListLimit),
                [this](int playlistStatus, const QByteArray &playlistData) {
         QVariantList playlists;
+        QVariantList followed;
         if (playlistStatus == 200) {
             const QJsonArray items = QJsonDocument::fromJson(playlistData).object().value("items").toArray();
-            for (const QJsonValue &value : items)
-                playlists.append(playlistItem(value.toObject()));
+            for (const QJsonValue &value : items) {
+                const QJsonObject playlist = value.toObject();
+                const QString owner = playlist.value("owner").toObject().value("id").toString();
+                // Playlists someone else made, Spotify's own above all, often
+                // cannot be read by apps, so they are played rather than opened.
+                const bool isFollowed = !owner.isEmpty() && !m_userId.isEmpty() && owner != m_userId;
+                QVariantMap item = playlistItem(playlist);
+                item.insert("followed", isFollowed);
+                (isFollowed ? followed : playlists).append(item);
+            }
         }
 
         m_api->get(QStringLiteral("/me/albums?limit=%1").arg(ListLimit),
-                   [this, playlists](int albumStatus, const QByteArray &albumData) {
+                   [this, playlists, followed](int albumStatus, const QByteArray &albumData) {
             QVariantList home;
             home.append(makeItem(QStringLiteral("liked"), QString(), QString(),
                                  tr("Liked songs"), tr("Songs you saved on Spotify"), QString()));
@@ -134,6 +196,13 @@ void SpotifyBrowser::refreshHome()
             if (!playlists.isEmpty()) {
                 home.append(makeHeader(tr("Playlists")));
                 home += playlists;
+            }
+
+            const QVariantList added = addedItems();
+            if (!added.isEmpty() || !followed.isEmpty()) {
+                home.append(makeHeader(tr("Followed lists")));
+                home += added;
+                home += followed;
             }
 
             if (albumStatus == 200) {
@@ -210,10 +279,13 @@ void SpotifyBrowser::loadPlaylist(const QString &id, const QString &name)
     m_api->get(QStringLiteral("/playlists/%1/items?limit=%2&additional_types=track,episode").arg(id).arg(ListLimit),
                [this, name, id](int status, const QByteArray &data) {
         setBusy(false);
-        if (status != 200)
+        const QString context = QStringLiteral("spotify:playlist:") + id;
+        if (status != 200) {
+            setTracks(QVariantList(), name, context, listError(status, true));
             return;
+        }
         const QJsonArray entries = QJsonDocument::fromJson(data).object().value("items").toArray();
-        setTracks(tracksFrom(entries, true), name, QStringLiteral("spotify:playlist:") + id);
+        setTracks(tracksFrom(entries, true), name, context);
     });
 }
 
@@ -224,11 +296,14 @@ void SpotifyBrowser::loadAlbum(const QString &id, const QString &name)
     m_api->get(QStringLiteral("/albums/%1/tracks?limit=%2").arg(id).arg(ListLimit),
                [this, name, id](int status, const QByteArray &data) {
         setBusy(false);
-        if (status != 200)
+        const QString context = QStringLiteral("spotify:album:") + id;
+        if (status != 200) {
+            setTracks(QVariantList(), name, context, listError(status, true));
             return;
+        }
         // Album tracks carry no album object, so they have no cover of their own.
         const QJsonArray entries = QJsonDocument::fromJson(data).object().value("items").toArray();
-        setTracks(tracksFrom(entries, false), name, QStringLiteral("spotify:album:") + id);
+        setTracks(tracksFrom(entries, false), name, context);
     });
 }
 
@@ -238,12 +313,117 @@ void SpotifyBrowser::loadLikedSongs()
     setBusy(true);
     m_api->get(QStringLiteral("/me/tracks?limit=%1").arg(ListLimit), [this](int status, const QByteArray &data) {
         setBusy(false);
-        if (status != 200)
+        if (status != 200) {
+            setTracks(QVariantList(), tr("Liked songs"), QString(), listError(status, false));
             return;
+        }
         const QJsonArray entries = QJsonDocument::fromJson(data).object().value("items").toArray();
         // Liked songs have no playlist context, so they are played as loose tracks.
         setTracks(tracksFrom(entries, true), tr("Liked songs"), QString());
     });
+}
+
+QString SpotifyBrowser::addPlaylistLink(const QString &link, const QString &name)
+{
+    const QString id = playlistIdFromLink(link);
+    if (id.isEmpty())
+        return tr("That does not look like a Spotify playlist link");
+
+    for (const AddedPlaylist &playlist : m_added) {
+        if (playlist.id == id)
+            return tr("That playlist is already in your library");
+    }
+
+    AddedPlaylist playlist;
+    playlist.id = id;
+    playlist.name = name.trimmed().isEmpty() ? tr("Added playlist") : name.trimmed();
+    m_added.append(playlist);
+    saveAddedPlaylists();
+
+    // Spotify usually refuses to name its own playlists, so the typed name
+    // stands unless the real one can be read.
+    fetchAddedPlaylistName(id);
+    refreshHome();
+    return QString();
+}
+
+bool SpotifyBrowser::isPlaylistLink(const QString &link) const
+{
+    return !playlistIdFromLink(link).isEmpty();
+}
+
+void SpotifyBrowser::removeAddedPlaylist(const QString &id)
+{
+    for (int i = 0; i < m_added.count(); ++i) {
+        if (m_added.at(i).id == id) {
+            m_added.removeAt(i);
+            saveAddedPlaylists();
+            refreshHome();
+            return;
+        }
+    }
+}
+
+void SpotifyBrowser::fetchAddedPlaylistName(const QString &id)
+{
+    m_api->get(QStringLiteral("/playlists/%1?fields=name").arg(id),
+               [this, id](int status, const QByteArray &data) {
+        if (status != 200)
+            return;
+        const QString name = QJsonDocument::fromJson(data).object().value("name").toString();
+        if (name.isEmpty())
+            return;
+        for (int i = 0; i < m_added.count(); ++i) {
+            if (m_added.at(i).id == id && m_added.at(i).name != name) {
+                m_added[i].name = name;
+                saveAddedPlaylists();
+                refreshHome();
+                return;
+            }
+        }
+    });
+}
+
+QVariantList SpotifyBrowser::addedItems() const
+{
+    QVariantList items;
+    for (const AddedPlaylist &playlist : m_added) {
+        QVariantMap item = makeItem(QStringLiteral("playlist"), playlist.id,
+                                    QStringLiteral("spotify:playlist:") + playlist.id,
+                                    playlist.name, tr("Added by link"), QString());
+        item.insert("followed", true);
+        item.insert("added", true);
+        items.append(item);
+    }
+    return items;
+}
+
+void SpotifyBrowser::loadAddedPlaylists()
+{
+    QSettings settings(settingsFile(), QSettings::IniFormat);
+    const int count = settings.beginReadArray(QStringLiteral("addedPlaylists"));
+    for (int i = 0; i < count; ++i) {
+        settings.setArrayIndex(i);
+        AddedPlaylist playlist;
+        playlist.id = settings.value(QStringLiteral("id")).toString();
+        playlist.name = settings.value(QStringLiteral("name")).toString();
+        if (!playlist.id.isEmpty())
+            m_added.append(playlist);
+    }
+    settings.endArray();
+}
+
+void SpotifyBrowser::saveAddedPlaylists()
+{
+    QSettings settings(settingsFile(), QSettings::IniFormat);
+    settings.remove(QStringLiteral("addedPlaylists"));
+    settings.beginWriteArray(QStringLiteral("addedPlaylists"), m_added.count());
+    for (int i = 0; i < m_added.count(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue(QStringLiteral("id"), m_added.at(i).id);
+        settings.setValue(QStringLiteral("name"), m_added.at(i).name);
+    }
+    settings.endArray();
 }
 
 QStringList SpotifyBrowser::trackUris() const
@@ -257,11 +437,13 @@ QStringList SpotifyBrowser::trackUris() const
     return uris;
 }
 
-void SpotifyBrowser::setTracks(const QVariantList &tracks, const QString &title, const QString &context)
+void SpotifyBrowser::setTracks(const QVariantList &tracks, const QString &title,
+                               const QString &context, const QString &error)
 {
     m_tracks = tracks;
     m_tracksTitle = title;
     m_tracksContext = context;
+    m_tracksError = error;
     emit tracksChanged();
 }
 

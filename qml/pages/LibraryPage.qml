@@ -15,8 +15,12 @@ Page {
             pageStack.push(Qt.resolvedUrl("TrackListPage.qml"))
             break
         case "playlist":
-            spotifyBrowser.loadPlaylist(item.id, item.name)
-            pageStack.push(Qt.resolvedUrl("TrackListPage.qml"))
+            // Spotify rarely lets apps read playlists made by someone else, so
+            // tapping one plays it. Press and hold to try the song list anyway.
+            if (item.followed === true)
+                page.play(item)
+            else
+                page.showSongs(item)
             break
         case "album":
             spotifyBrowser.loadAlbum(item.id, item.name)
@@ -27,6 +31,25 @@ Page {
             pageStack.push(Qt.resolvedUrl("PlayerPage.qml"))
             break
         }
+    }
+
+    function showSongs(item) {
+        spotifyBrowser.loadPlaylist(item.id, item.name)
+        pageStack.push(Qt.resolvedUrl("TrackListPage.qml"))
+    }
+
+    function addPlaylist() {
+        var dialog = pageStack.push(Qt.resolvedUrl("AddPlaylistDialog.qml"))
+        dialog.accepted.connect(function() {
+            var error = spotifyBrowser.addPlaylistLink(dialog.link, dialog.name)
+            if (error !== "")
+                errorLabel.show(error)
+        })
+    }
+
+    function play(item) {
+        spotifyPlayer.playContext(item.uri, "")
+        pageStack.push(Qt.resolvedUrl("PlayerPage.qml"))
     }
 
     Component.onCompleted: {
@@ -88,6 +111,13 @@ Page {
                 onClicked: pageStack.push(Qt.resolvedUrl("PlayerPage.qml"))
             }
             MenuItem {
+                // Discover Weekly and the other "Made for you" playlists are
+                // not in the Spotify API, so they are added by their link.
+                text: qsTr("Add playlist by link")
+                visible: spotifyAuth.loggedIn
+                onClicked: page.addPlaylist()
+            }
+            MenuItem {
                 text: qsTr("Refresh")
                 onClicked: page.query === "" ? spotifyBrowser.refreshHome() : spotifyBrowser.search(page.query)
             }
@@ -104,7 +134,8 @@ Page {
             enabled: spotifyAuth.libraryAccess && listView.count === 0 && !spotifyBrowser.busy
             text: page.query === "" ? qsTr("Nothing here yet") : qsTr("Nothing found")
             hintText: page.query === ""
-                      ? qsTr("Your playlists and saved albums show up here")
+                      ? qsTr("Your playlists and saved albums show up here. Pull down to add "
+                             + "a playlist by its link.")
                       : qsTr("Spotify returns at most 10 results of each kind")
         }
 
@@ -117,6 +148,26 @@ Page {
             contentHeight: isHeader ? Theme.itemSizeExtraSmall : Theme.itemSizeMedium
             enabled: !isHeader
             onClicked: page.open(modelData)
+            menu: modelData.followed === true ? followedMenu : null
+
+            Component {
+                id: followedMenu
+                ContextMenu {
+                    MenuItem {
+                        text: qsTr("Play")
+                        onClicked: page.play(modelData)
+                    }
+                    MenuItem {
+                        text: qsTr("Show songs")
+                        onClicked: page.showSongs(modelData)
+                    }
+                    MenuItem {
+                        text: qsTr("Remove")
+                        visible: modelData.added === true
+                        onClicked: spotifyBrowser.removeAddedPlaylist(modelData.id)
+                    }
+                }
+            }
 
             SectionHeader {
                 visible: row.isHeader

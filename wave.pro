@@ -33,6 +33,7 @@ DISTFILES += \
     qml/cover/CoverPage.qml \
     qml/pages/AboutPage.qml \
     qml/pages/AccountPage.qml \
+    qml/pages/AddPlaylistDialog.qml \
     qml/pages/DevicesPage.qml \
     qml/pages/LibraryPage.qml \
     qml/pages/PlayerPage.qml \
@@ -48,10 +49,14 @@ license.path = /usr/share/licenses/$$TARGET
 INSTALLS += license
 
 # librespot plays audio on the phone. It is built separately with
-# scripts/build-librespot.sh (aarch64 only for now); pass LIBRESPOT_BIN=<path>
-# to use another binary. Without it Wave still works as a remote control.
-isEmpty(LIBRESPOT_BIN):contains(QT_ARCH, arm64): \
-    LIBRESPOT_BIN = $$PWD/build/deps/librespot/target/aarch64-unknown-linux-gnu/release/librespot
+# scripts/build-librespot.sh <arch>; pass LIBRESPOT_BIN=<path> to use another
+# binary. Without it Wave still works as a remote control.
+isEmpty(LIBRESPOT_BIN) {
+    contains(QT_ARCH, arm64): \
+        LIBRESPOT_BIN = $$PWD/build/deps/librespot/target/aarch64-unknown-linux-gnu/release/librespot
+    else:contains(QT_ARCH, arm): \
+        LIBRESPOT_BIN = $$PWD/build/deps/librespot/target/armv7-unknown-linux-gnueabihf/release/librespot
+}
 !isEmpty(LIBRESPOT_BIN):exists($$LIBRESPOT_BIN) {
     librespot.files = $$LIBRESPOT_BIN
     librespot.path = /usr/share/$$TARGET/bin

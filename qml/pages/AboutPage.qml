@@ -56,7 +56,8 @@ Page {
                 text: qsTr("While \"Play on this phone\" is on, Wave keeps playing after you close "
                            + "it. That is on purpose, not a bug: the music would otherwise stop the "
                            + "moment you leave the app. Opening Wave again returns to the running app.\n\n"
-                           + "To stop completely, use \"Quit Wave\" below or in the Now playing menu. "
+                           + "To stop completely, use \"Quit Wave\" below or in the Now playing menu, "
+                           + "or double tap the right icon on the app cover. "
                            + "Turning off \"Play on this phone\" in Devices also stops playback here.")
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.secondaryHighlightColor

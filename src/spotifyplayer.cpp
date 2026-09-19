@@ -25,6 +25,7 @@ SpotifyPlayer::SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent
     , m_durationMs(0)
     , m_progressMs(0)
     , m_shuffle(false)
+    , m_saved(false)
 {
     m_pollTimer.setInterval(5000);
     connect(&m_pollTimer, &QTimer::timeout, this, &SpotifyPlayer::refresh);
@@ -233,6 +234,58 @@ void SpotifyPlayer::applyState(const QJsonObject &state)
     m_shuffle = state.value("shuffle_state").toBool();
     m_deviceName = state.value("device").toObject().value("name").toString();
     emit playbackChanged();
+
+    // Podcast episodes cannot be liked, so they keep an empty track id.
+    const QString trackId = item.value("type").toString() == QLatin1String("episode")
+            ? QString() : item.value("id").toString();
+    if (trackId != m_trackId) {
+        m_trackId = trackId;
+        m_saved = false;
+        emit savedChanged();
+        checkSaved();
+    }
+}
+
+void SpotifyPlayer::toggleSaved()
+{
+    if (m_trackId.isEmpty())
+        return;
+
+    const bool wanted = !m_saved;
+    const QString id = m_trackId;
+    // Show the new state at once; Spotify is told in the background.
+    setSaved(wanted);
+    m_api->send(wanted ? "PUT" : "DELETE",
+                QStringLiteral("/me/tracks?ids=%1").arg(id), QByteArray(),
+                [this, id, wanted](int status, const QByteArray &) {
+        if (status == 200 || status == 204)
+            return;
+        if (id == m_trackId)
+            setSaved(!wanted); // Put the heart back the way it was.
+    });
+}
+
+void SpotifyPlayer::checkSaved()
+{
+    if (m_trackId.isEmpty())
+        return;
+
+    const QString id = m_trackId;
+    m_api->get(QStringLiteral("/me/tracks/contains?ids=%1").arg(id),
+               [this, id](int status, const QByteArray &data) {
+        if (status != 200 || id != m_trackId)
+            return;
+        const QJsonArray answer = QJsonDocument::fromJson(data).array();
+        setSaved(!answer.isEmpty() && answer.at(0).toBool());
+    });
+}
+
+void SpotifyPlayer::setSaved(bool saved)
+{
+    if (m_saved == saved)
+        return;
+    m_saved = saved;
+    emit savedChanged();
 }
 
 void SpotifyPlayer::applyDevices(const QByteArray &data)

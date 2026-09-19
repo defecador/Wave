@@ -27,16 +27,19 @@ Page {
 
         PullDownMenu {
             MenuItem {
+                // A playlist Spotify refuses to list can still be played whole.
                 text: qsTr("Play all")
-                visible: listView.count > 0
+                visible: listView.count > 0 || spotifyBrowser.tracksContext !== ""
                 onClicked: page.playFrom("")
             }
         }
 
         ViewPlaceholder {
             enabled: listView.count === 0 && !spotifyBrowser.busy
-            text: qsTr("No songs")
-            hintText: qsTr("Wave loads the first 50 songs of a list")
+            text: spotifyBrowser.tracksError === "" ? qsTr("No songs") : qsTr("Cannot show the songs")
+            hintText: spotifyBrowser.tracksError === ""
+                      ? qsTr("Wave loads the first 50 songs of a list")
+                      : spotifyBrowser.tracksError
         }
 
         delegate: ListItem {

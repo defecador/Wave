@@ -26,7 +26,8 @@ const quint16 RedirectPort = 8898;
 const char *const RedirectPath = "/callback";
 const char *const Scopes =
         "user-read-playback-state user-modify-playback-state user-read-currently-playing "
-        "playlist-read-private playlist-read-collaborative user-library-read";
+        "playlist-read-private playlist-read-collaborative user-library-read "
+        "user-library-modify";
 
 QByteArray base64Url(const QByteArray &data)
 {
@@ -280,6 +281,12 @@ void SpotifyAuth::requestToken(const QList<QPair<QString, QString> > &params, bo
         if (libraryAccess != m_libraryAccess) {
             m_libraryAccess = libraryAccess;
             emit libraryAccessChanged();
+        }
+
+        const bool libraryWrite = scopes.contains(QLatin1String("user-library-modify"));
+        if (libraryWrite != m_libraryWrite) {
+            m_libraryWrite = libraryWrite;
+            emit libraryWriteChanged();
         }
 
         // Spotify may rotate the refresh token on every refresh.

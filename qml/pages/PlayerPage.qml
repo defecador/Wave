@@ -147,8 +147,17 @@ Page {
             Row {
                 visible: spotifyAuth.loggedIn && spotifyPlayer.active
                 anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Theme.paddingLarge
+                spacing: Theme.paddingMedium
 
+                IconButton {
+                    anchors.verticalCenter: parent.verticalCenter
+                    icon.source: spotifyPlayer.saved ? "image://theme/icon-m-favorite-selected"
+                                                     : "image://theme/icon-m-favorite"
+                    // Liking needs a permission older logins do not have.
+                    enabled: spotifyPlayer.savable && spotifyAuth.libraryWrite
+                    opacity: enabled ? 1.0 : 0.4
+                    onClicked: spotifyPlayer.toggleSaved()
+                }
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
                     icon.source: "image://theme/icon-m-shuffle"

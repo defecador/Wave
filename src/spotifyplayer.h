@@ -33,6 +33,10 @@ class SpotifyPlayer : public QObject
     Q_PROPERTY(bool shuffle READ shuffle NOTIFY playbackChanged)
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY playbackChanged)
     Q_PROPERTY(QVariantList devices READ devices NOTIFY devicesChanged)
+    // Whether the current song is in Liked songs. Only meaningful for songs,
+    // not podcast episodes, and only known once Spotify has been asked.
+    Q_PROPERTY(bool saved READ saved NOTIFY savedChanged)
+    Q_PROPERTY(bool savable READ savable NOTIFY savedChanged)
 
 public:
     explicit SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent = nullptr);
@@ -53,6 +57,8 @@ public:
     bool shuffle() const { return m_shuffle; }
     QString deviceName() const { return m_deviceName; }
     QVariantList devices() const { return m_devices; }
+    bool saved() const { return m_saved; }
+    bool savable() const { return !m_trackId.isEmpty(); }
 
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void refreshDevices();
@@ -63,6 +69,8 @@ public:
     Q_INVOKABLE void previous();
     Q_INVOKABLE void seek(int positionMs);
     Q_INVOKABLE void setShuffle(bool enabled);
+    // Adds the current song to Liked songs, or takes it out again.
+    Q_INVOKABLE void toggleSaved();
     Q_INVOKABLE void transferTo(const QString &deviceId);
     // Waits for a device to appear in the device list, then moves playback to it.
     Q_INVOKABLE void transferToDeviceNamed(const QString &name, int attempts = 5);
@@ -76,12 +84,15 @@ signals:
     void pollIntervalChanged();
     void playbackChanged();
     void devicesChanged();
+    void savedChanged();
     void errorOccurred(const QString &message);
 
 private:
     void command(const QByteArray &verb, const QString &path, const QByteArray &body = QByteArray());
     void applyState(const QJsonObject &state);
     void applyDevices(const QByteArray &data);
+    void checkSaved();
+    void setSaved(bool saved);
 
     SpotifyApi *m_api;
     SpotifyAuth *m_auth;
@@ -97,6 +108,8 @@ private:
     int m_progressMs;
     bool m_shuffle;
     QString m_deviceName;
+    QString m_trackId;
+    bool m_saved;
     QVariantList m_devices;
 };
 
