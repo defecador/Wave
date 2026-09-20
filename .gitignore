@@ -13,6 +13,7 @@ qrc_*.cpp
 /wave
 /RPMS/
 /installroot/
+*.rpm
 /documentation.list
 
 # IDE
@@ -20,3 +21,6 @@ qrc_*.cpp
 
 # Generated from VERSION by wave.pro
 appversion.h
+
+# Screenshots kept for the store listing, not part of the source
+/Screenshots/
