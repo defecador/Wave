@@ -106,11 +106,21 @@ Wave is built as a remote control only.
 Use a separate build directory:
 
 ```bash
-mkdir -p build && cd build && sfdk -c target=SailfishOS-5.1.0.11-aarch64 build ..
+mkdir -p build && cd build && sfdk -c target=SailfishOS-5.1.0.11EA-aarch64 build ..
 ```
 
-The RPM ends up in `build/RPMS/`. Use the `armv7hl` target for 32-bit devices,
-and `i486` for the emulator, which has no on-device playback.
+Target names follow the release you installed, so check yours with
+`sdk-assistant list` and use that name: the early access releases carry an `EA`
+suffix, as above. The RPM ends up in `build/RPMS/`. Use the `armv7hl` target for
+32-bit devices, and `i486` for the emulator, which has no on-device playback.
+
+Where `sfdk` cannot reach the build engine, the same build runs inside the
+engine itself, which has the source tree mounted:
+
+```bash
+ssh -i ~/SailfishOS/vmshare/ssh/private_keys/sdk -p 2222 mersdk@127.0.0.1
+cd /path/to/Wave/build && mb2 -t SailfishOS-5.1.0.11EA-aarch64 build ..
+```
 
 ## Project layout
 
