@@ -4,6 +4,7 @@
 #define SPOTIFYPLAYER_H
 
 #include <QByteArray>
+#include <QElapsedTimer>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -30,6 +31,8 @@ class SpotifyPlayer : public QObject
     Q_PROPERTY(QString coverUrl READ coverUrl NOTIFY playbackChanged)
     Q_PROPERTY(int durationMs READ durationMs NOTIFY playbackChanged)
     Q_PROPERTY(int progressMs READ progressMs NOTIFY playbackChanged)
+    // Spotify refuses to seek in adverts, and in a few podcast episodes.
+    Q_PROPERTY(bool seekable READ seekable NOTIFY playbackChanged)
     Q_PROPERTY(bool shuffle READ shuffle NOTIFY playbackChanged)
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY playbackChanged)
     Q_PROPERTY(QVariantList devices READ devices NOTIFY devicesChanged)
@@ -54,6 +57,7 @@ public:
     QString coverUrl() const { return m_coverUrl; }
     int durationMs() const { return m_durationMs; }
     int progressMs() const { return m_progressMs; }
+    bool seekable() const { return m_seekable; }
     bool shuffle() const { return m_shuffle; }
     QString deviceName() const { return m_deviceName; }
     QVariantList devices() const { return m_devices; }
@@ -68,6 +72,13 @@ public:
     Q_INVOKABLE void next();
     Q_INVOKABLE void previous();
     Q_INVOKABLE void seek(int positionMs);
+    // Seeks forwards, or backwards for a negative amount.
+    Q_INVOKABLE void seekBy(int deltaMs);
+    // Where the song would be now, counted from the clock since the last time
+    // Spotify said. Polling is seconds apart, so anything drawing a progress
+    // bar of its own -- a car stereo, over MPRIS -- has to be told this instead
+    // of progressMs, which only moves when Spotify is asked.
+    Q_INVOKABLE int livePositionMs() const;
     Q_INVOKABLE void setShuffle(bool enabled);
     // Adds the current song to Liked songs, or takes it out again.
     Q_INVOKABLE void toggleSaved();
@@ -85,6 +96,8 @@ signals:
     void playbackChanged();
     void devicesChanged();
     void savedChanged();
+    // The song jumped rather than played on, so listeners have to catch up.
+    void seeked(int positionMs);
     void errorOccurred(const QString &message);
 
 private:
@@ -93,6 +106,8 @@ private:
     void applyDevices(const QByteArray &data);
     void checkSaved();
     void setSaved(bool saved);
+    // Records where the song is and when that was true.
+    void setProgress(int positionMs);
 
     SpotifyApi *m_api;
     SpotifyAuth *m_auth;
@@ -106,6 +121,10 @@ private:
     QString m_coverUrl;
     int m_durationMs;
     int m_progressMs;
+    // Restarted whenever m_progressMs is, so that the two together say where
+    // the song is at any later moment.
+    QElapsedTimer m_sinceProgress;
+    bool m_seekable;
     bool m_shuffle;
     QString m_deviceName;
     QString m_trackId;

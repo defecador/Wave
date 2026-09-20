@@ -27,6 +27,8 @@ ApplicationWindow {
     // Lock screen, headset and Bluetooth controls. They go through the Web API,
     // so they work both for this phone and for other Spotify Connect devices.
     MprisPlayer {
+        id: mprisPlayer
+
         serviceName: "wave"
         identity: "Wave"
         desktopEntry: "wave"
@@ -38,7 +40,7 @@ ApplicationWindow {
         canPause: canPlay
         canGoNext: canPlay
         canGoPrevious: canPlay
-        canSeek: false
+        canSeek: canPlay && spotifyPlayer.seekable
         canRaise: true
 
         playbackStatus: !spotifyPlayer.active ? Mpris.Stopped
@@ -52,11 +54,26 @@ ApplicationWindow {
             duration: spotifyPlayer.durationMs
         }
 
+        // A car stereo draws a progress bar of its own and asks for the
+        // position every time it redraws it. Spotify is only polled every few
+        // seconds, so the answer comes from Wave's own clock instead.
+        onPositionRequested: position = spotifyPlayer.livePositionMs()
+        onSeekRequested: spotifyPlayer.seekBy(offset)
+        // Here "position" is the one being asked for, not the property above.
+        onSetPositionRequested: spotifyPlayer.seek(position)
+
         onPlayRequested: spotifyPlayer.play()
         onPauseRequested: spotifyPlayer.pause()
         onPlayPauseRequested: spotifyPlayer.togglePlay()
         onNextRequested: spotifyPlayer.next()
         onPreviousRequested: spotifyPlayer.previous()
         onRaiseRequested: appService.activate()
+    }
+
+    Connections {
+        target: spotifyPlayer
+        // Move the car's progress bar the moment the song jumps, rather than
+        // leaving it wrong until the stereo next asks where the song is.
+        onSeeked: mprisPlayer.seeked(positionMs)
     }
 }

@@ -31,6 +31,7 @@ SpotifyPlayer::SpotifyPlayer(SpotifyApi *api, SpotifyAuth *auth, QObject *parent
     , m_playing(false)
     , m_durationMs(0)
     , m_progressMs(0)
+    , m_seekable(false)
     , m_shuffle(false)
     , m_saved(false)
 {
@@ -98,6 +99,8 @@ void SpotifyPlayer::refreshDevices()
 void SpotifyPlayer::play()
 {
     command("PUT", QStringLiteral("/me/player/play"));
+    // Count from here, so the song carries on from where it was left.
+    setProgress(m_progressMs);
     m_playing = true;
     emit playbackChanged();
 }
@@ -105,6 +108,8 @@ void SpotifyPlayer::play()
 void SpotifyPlayer::pause()
 {
     command("PUT", QStringLiteral("/me/player/pause"));
+    // Freeze the counting at wherever the song had got to.
+    setProgress(livePositionMs());
     m_playing = false;
     emit playbackChanged();
 }
@@ -120,18 +125,46 @@ void SpotifyPlayer::togglePlay()
 void SpotifyPlayer::next()
 {
     command("POST", QStringLiteral("/me/player/next"));
+    setProgress(0); // Another song is starting; the next poll says which.
 }
 
 void SpotifyPlayer::previous()
 {
     command("POST", QStringLiteral("/me/player/previous"));
+    setProgress(0);
 }
 
 void SpotifyPlayer::seek(int positionMs)
 {
     command("PUT", QStringLiteral("/me/player/seek?position_ms=%1").arg(positionMs));
-    m_progressMs = positionMs;
+    setProgress(positionMs);
     emit playbackChanged();
+    emit seeked(positionMs);
+}
+
+void SpotifyPlayer::seekBy(int deltaMs)
+{
+    if (!m_seekable)
+        return;
+    const int wanted = livePositionMs() + deltaMs;
+    seek(qBound(0, wanted, m_durationMs > 0 ? m_durationMs : wanted));
+}
+
+int SpotifyPlayer::livePositionMs() const
+{
+    if (!m_active)
+        return 0;
+    if (!m_playing || !m_sinceProgress.isValid())
+        return m_progressMs;
+    const qint64 live = qint64(m_progressMs) + m_sinceProgress.elapsed();
+    // Never past the end: by then the next song has started anyway.
+    return int(m_durationMs > 0 ? qMin<qint64>(live, m_durationMs) : live);
+}
+
+void SpotifyPlayer::setProgress(int positionMs)
+{
+    m_progressMs = positionMs;
+    m_sinceProgress.restart();
 }
 
 void SpotifyPlayer::setShuffle(bool enabled)
@@ -241,7 +274,10 @@ void SpotifyPlayer::applyState(const QJsonObject &state)
     // Spotify lists images largest first.
     m_coverUrl = images.isEmpty() ? QString() : images.at(0).toObject().value("url").toString();
     m_durationMs = item.value("duration_ms").toInt();
-    m_progressMs = state.value("progress_ms").toInt();
+    setProgress(state.value("progress_ms").toInt());
+    // Spotify says what cannot be done rather than what can.
+    const QJsonObject disallows = state.value("actions").toObject().value("disallows").toObject();
+    m_seekable = m_active && !disallows.value("seeking").toBool();
     m_shuffle = state.value("shuffle_state").toBool();
     m_deviceName = state.value("device").toObject().value("name").toString();
     emit playbackChanged();
