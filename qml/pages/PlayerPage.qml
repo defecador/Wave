@@ -16,6 +16,16 @@ Page {
         return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
     }
 
+    // Comes back to the library itself rather than one page back, since the
+    // player can be reached from a track list or from Devices as well.
+    function showLibrary() {
+        var library = pageStack.find(function(candidate) {
+            return candidate.objectName === "libraryPage"
+        })
+        if (library)
+            pageStack.pop(library)
+    }
+
     function syncPosition() {
         position = spotifyPlayer.progressMs
         if (!slider.down)
@@ -89,6 +99,14 @@ Page {
             PageHeader {
                 title: "Wave"
                 description: spotifyPlayer.active ? qsTr("Playing on %1").arg(spotifyPlayer.deviceName) : ""
+
+                // The header is the way back to the library, however deep the
+                // page was reached from. Dragging still opens the pulley menu,
+                // because the flickable takes the press back on a drag.
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: page.showLibrary()
+                }
             }
 
             Item {
@@ -144,45 +162,56 @@ Page {
                 onDownChanged: if (!down) spotifyPlayer.seek(value)
             }
 
-            Row {
+            // Playing the song comes first and stays centred on the page; what
+            // is done to the song sits underneath it.
+            Column {
+                width: parent.width
                 visible: spotifyAuth.loggedIn && spotifyPlayer.active
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Theme.paddingMedium
+                spacing: Theme.paddingSmall
 
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon.source: spotifyPlayer.saved ? "image://theme/icon-m-like"
-                                                     : "image://theme/icon-m-outline-like"
-                    enabled: spotifyPlayer.savable
-                    opacity: enabled ? 1.0 : 0.4
-                    onClicked: {
-                        // Liking needs a permission older logins do not have.
-                        if (spotifyAuth.libraryWrite)
-                            spotifyPlayer.toggleSaved()
-                        else
-                            errorLabel.show(qsTr("Log out and log in again in Account to like songs"))
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Theme.paddingMedium
+
+                    IconButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon.source: "image://theme/icon-m-previous"
+                        onClicked: spotifyPlayer.previous()
+                    }
+                    IconButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon.source: spotifyPlayer.playing ? "image://theme/icon-l-pause" : "image://theme/icon-l-play"
+                        onClicked: spotifyPlayer.togglePlay()
+                    }
+                    IconButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon.source: "image://theme/icon-m-next"
+                        onClicked: spotifyPlayer.next()
                     }
                 }
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon.source: "image://theme/icon-m-shuffle"
-                    highlighted: spotifyPlayer.shuffle
-                    onClicked: spotifyPlayer.setShuffle(!spotifyPlayer.shuffle)
-                }
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon.source: "image://theme/icon-m-previous"
-                    onClicked: spotifyPlayer.previous()
-                }
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon.source: spotifyPlayer.playing ? "image://theme/icon-l-pause" : "image://theme/icon-l-play"
-                    onClicked: spotifyPlayer.togglePlay()
-                }
-                IconButton {
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon.source: "image://theme/icon-m-next"
-                    onClicked: spotifyPlayer.next()
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Theme.paddingLarge
+
+                    IconButton {
+                        icon.source: spotifyPlayer.saved ? "image://theme/icon-m-like"
+                                                         : "image://theme/icon-m-outline-like"
+                        enabled: spotifyPlayer.savable
+                        opacity: enabled ? 1.0 : 0.4
+                        onClicked: {
+                            // Liking needs a permission older logins do not have.
+                            if (spotifyAuth.libraryWrite)
+                                spotifyPlayer.toggleSaved()
+                            else
+                                errorLabel.show(qsTr("Log out and log in again in Account to like songs"))
+                        }
+                    }
+                    IconButton {
+                        icon.source: "image://theme/icon-m-shuffle"
+                        highlighted: spotifyPlayer.shuffle
+                        onClicked: spotifyPlayer.setShuffle(!spotifyPlayer.shuffle)
+                    }
                 }
             }
         }

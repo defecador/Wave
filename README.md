@@ -47,8 +47,10 @@ your account.
 Spotify does not let apps read the playlists it makes itself, and its "Made for
 you" playlists are not in the API at all. To reach Discover Weekly, Release
 Radar or a daily mix, copy its link in the Spotify app (three dots ▸ Share ▸
-Copy link) and add it in Wave with **Add playlist by link**. Wave cannot list
-their songs, but it plays them, and the link keeps working as they change.
+Copy link) and add it in Wave with **Add playlist by link**. They then sit under
+**Made for you**. Wave cannot list their songs, but it plays them, and because
+only the link is stored, a daily mix plays whatever Spotify has put in it that
+day.
 
 Playlists made by other people appear under **Followed lists**. Tapping one
 plays it; press and hold to try to see its songs.

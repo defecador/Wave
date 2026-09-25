@@ -6,6 +6,9 @@ import Sailfish.Silica 1.0
 Page {
     id: page
 
+    // Other pages find the library by this name to come back to it.
+    objectName: "libraryPage"
+
     property string query: ""
 
     function open(item) {
@@ -36,15 +39,6 @@ Page {
     function showSongs(item) {
         spotifyBrowser.loadPlaylist(item.id, item.name)
         pageStack.push(Qt.resolvedUrl("TrackListPage.qml"))
-    }
-
-    function addPlaylist() {
-        var dialog = pageStack.push(Qt.resolvedUrl("AddPlaylistDialog.qml"))
-        dialog.accepted.connect(function() {
-            var error = spotifyBrowser.addPlaylistLink(dialog.link, dialog.name)
-            if (error !== "")
-                errorLabel.show(error)
-        })
     }
 
     function play(item) {
@@ -112,10 +106,11 @@ Page {
             }
             MenuItem {
                 // Discover Weekly and the other "Made for you" playlists are
-                // not in the Spotify API, so they are added by their link.
-                text: qsTr("Add playlist by link")
+                // not in the Spotify API, so they are kept by their link on a
+                // page of their own.
+                text: qsTr("Made for you")
                 visible: spotifyAuth.loggedIn
-                onClicked: page.addPlaylist()
+                onClicked: pageStack.push(Qt.resolvedUrl("MadeForYouPage.qml"))
             }
             MenuItem {
                 text: qsTr("Refresh")

@@ -27,6 +27,8 @@ class SpotifyBrowser : public QObject
     // Why the track list is empty, if Spotify refused it. Empty otherwise.
     Q_PROPERTY(QString tracksError READ tracksError NOTIFY tracksChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
+    // The playlists added by link, for the page that manages them.
+    Q_PROPERTY(QVariantList addedPlaylists READ addedItems NOTIFY addedPlaylistsChanged)
 
 public:
     explicit SpotifyBrowser(SpotifyApi *api, QObject *parent = nullptr);
@@ -58,6 +60,7 @@ signals:
     void searchResultsChanged();
     void tracksChanged();
     void busyChanged();
+    void addedPlaylistsChanged();
 
 private:
     struct AddedPlaylist {

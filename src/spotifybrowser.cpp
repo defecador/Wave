@@ -198,10 +198,17 @@ void SpotifyBrowser::loadHome()
                 home += playlists;
             }
 
+            // Playlists Spotify makes for one person -- the daily mixes,
+            // Discover Weekly -- are not in the API at all, so they are the
+            // ones added by link. They are nobody's followed lists.
             const QVariantList added = addedItems();
-            if (!added.isEmpty() || !followed.isEmpty()) {
-                home.append(makeHeader(tr("Followed lists")));
+            if (!added.isEmpty()) {
+                home.append(makeHeader(tr("Made for you")));
                 home += added;
+            }
+
+            if (!followed.isEmpty()) {
+                home.append(makeHeader(tr("Followed lists")));
                 home += followed;
             }
 
@@ -343,6 +350,7 @@ QString SpotifyBrowser::addPlaylistLink(const QString &link, const QString &name
     // Spotify usually refuses to name its own playlists, so the typed name
     // stands unless the real one can be read.
     fetchAddedPlaylistName(id);
+    emit addedPlaylistsChanged();
     refreshHome();
     return QString();
 }
@@ -358,6 +366,7 @@ void SpotifyBrowser::removeAddedPlaylist(const QString &id)
         if (m_added.at(i).id == id) {
             m_added.removeAt(i);
             saveAddedPlaylists();
+            emit addedPlaylistsChanged();
             refreshHome();
             return;
         }
@@ -377,6 +386,7 @@ void SpotifyBrowser::fetchAddedPlaylistName(const QString &id)
             if (m_added.at(i).id == id && m_added.at(i).name != name) {
                 m_added[i].name = name;
                 saveAddedPlaylists();
+                emit addedPlaylistsChanged();
                 refreshHome();
                 return;
             }
