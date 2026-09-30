@@ -13,8 +13,8 @@
 # a Docker engine the user may not talk to, for instance -- set ENGINE_SSH=1 to go
 # straight in over SSH instead.
 #
-# Output: build/deps/librespot/target/<rust triple>/release/librespot, which wave.pro
-# installs to /usr/share/wave/bin/ when it exists.
+# Output: build/deps/librespot/target/<rust triple>/release/librespot, which
+# wave.pro installs to /usr/share/harbour-wave/bin/ when it exists.
 
 set -eu
 

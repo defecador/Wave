@@ -16,6 +16,8 @@ class LibrespotController : public QObject
     Q_OBJECT
     Q_PROPERTY(bool available READ available CONSTANT)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool playHereByDefault READ playHereByDefault WRITE setPlayHereByDefault
+               NOTIFY playHereByDefaultChanged)
     Q_PROPERTY(State state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString deviceName READ deviceName CONSTANT)
     Q_PROPERTY(QString loginUrl READ loginUrl NOTIFY loginUrlChanged)
@@ -37,6 +39,8 @@ public:
     bool available() const;
     bool enabled() const { return m_enabled; }
     void setEnabled(bool enabled);
+    bool playHereByDefault() const { return m_playHereByDefault; }
+    void setPlayHereByDefault(bool playHere);
     State state() const { return m_state; }
     QString deviceName() const;
     QString loginUrl() const { return m_loginUrl; }
@@ -47,11 +51,15 @@ public:
 
 signals:
     void enabledChanged();
+    void playHereByDefaultChanged();
     void stateChanged();
     void loginUrlChanged();
     void lastErrorChanged();
     // The receiver is logged in after the user turned it on; playback can move to it.
     void readyToPlay(const QString &deviceName);
+    // The receiver came up on its own at startup. Playback should land here too,
+    // but only if nothing is already playing somewhere else.
+    void readyToClaim(const QString &deviceName);
     // The receiver started loading a track, so Spotify's playback state changed.
     void trackLoaded();
 
@@ -71,7 +79,9 @@ private:
     QString m_loginUrl;
     QString m_lastError;
     bool m_stopping;
+    bool m_playHereByDefault;
     bool m_claimPending;
+    bool m_claimOnStart;
 };
 
 #endif // LIBRESPOTCONTROLLER_H

@@ -1,6 +1,6 @@
-Name:       wave
+Name:       harbour-wave
 Summary:    Unofficial Spotify client for Sailfish OS
-Version:    0.2.6
+Version:    0.2.7
 Release:    1
 License:    GPL-3.0-or-later
 Source0:    %{name}-%{version}.tar.bz2

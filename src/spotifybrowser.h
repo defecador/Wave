@@ -52,6 +52,8 @@ public:
     Q_INVOKABLE QString addPlaylistLink(const QString &link, const QString &name);
     Q_INVOKABLE bool isPlaylistLink(const QString &link) const;
     Q_INVOKABLE void removeAddedPlaylist(const QString &id);
+    // Their order is the one they are shown in, so it is theirs to arrange.
+    Q_INVOKABLE void moveAddedPlaylist(int from, int to);
     // URIs of the loaded tracks, for playing a list that has no context.
     Q_INVOKABLE QStringList trackUris() const;
 

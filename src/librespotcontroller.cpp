@@ -42,7 +42,9 @@ LibrespotController::LibrespotController(QObject *parent)
     , m_enabled(false)
     , m_state(Stopped)
     , m_stopping(false)
+    , m_playHereByDefault(true)
     , m_claimPending(false)
+    , m_claimOnStart(false)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     connect(&m_process, &QProcess::readyRead, this, &LibrespotController::onReadyRead);
@@ -57,8 +59,11 @@ LibrespotController::LibrespotController(QObject *parent)
 
     QSettings settings(settingsFile(), QSettings::IniFormat);
     m_enabled = available() && settings.value(QStringLiteral("librespot/enabled"), false).toBool();
-    if (m_enabled)
+    m_playHereByDefault = settings.value(QStringLiteral("librespot/playHereByDefault"), true).toBool();
+    if (m_enabled) {
+        m_claimOnStart = m_playHereByDefault;
         start();
+    }
 }
 
 LibrespotController::~LibrespotController()
@@ -87,6 +92,17 @@ void LibrespotController::setEnabled(bool enabled)
         start();
     else
         stop();
+}
+
+void LibrespotController::setPlayHereByDefault(bool playHere)
+{
+    if (playHere == m_playHereByDefault)
+        return;
+
+    m_playHereByDefault = playHere;
+    QSettings settings(settingsFile(), QSettings::IniFormat);
+    settings.setValue(QStringLiteral("librespot/playHereByDefault"), m_playHereByDefault);
+    emit playHereByDefaultChanged();
 }
 
 QString LibrespotController::deviceName() const
@@ -172,7 +188,11 @@ void LibrespotController::onReadyRead()
             setState(Running);
             if (m_claimPending) {
                 m_claimPending = false;
+                m_claimOnStart = false;
                 emit readyToPlay(deviceName());
+            } else if (m_claimOnStart) {
+                m_claimOnStart = false;
+                emit readyToClaim(deviceName());
             }
         } else if (line.contains(QLatin1String(" ms) loaded"))) {
             // "<Track name> (215000 ms) loaded"

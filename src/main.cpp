@@ -69,9 +69,9 @@ void installQuitSignalHandlers(QCoreApplication *app)
 int main(int argc, char *argv[])
 {
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
-    // Must match OrganizationName/ApplicationName in wave.desktop (Sailjail).
-    app->setOrganizationName(QStringLiteral("io.github.wave"));
-    app->setApplicationName(QStringLiteral("wave"));
+    // Must match OrganizationName/ApplicationName in harbour-wave.desktop (Sailjail).
+    app->setOrganizationName(QStringLiteral("harbour-wave"));
+    app->setApplicationName(QStringLiteral("harbour-wave"));
     app->setApplicationVersion(QStringLiteral(APP_VERSION_STRING(APP_VERSION_RAW)));
 
     AppService appService;
@@ -99,6 +99,11 @@ int main(int argc, char *argv[])
 
     QObject::connect(&librespot, &LibrespotController::readyToPlay, &player, [&player](const QString &name) {
         player.transferToDeviceNamed(name);
+    });
+    // The receiver was already on when Wave started, so make the phone the
+    // device playback lands on -- unless music is playing elsewhere.
+    QObject::connect(&librespot, &LibrespotController::readyToClaim, &player, [&player](const QString &name) {
+        player.transferToDeviceNamed(name, 5, true);
     });
     // librespot logs every track it loads; refresh right away instead of waiting for the next poll.
     QObject::connect(&librespot, &LibrespotController::trackLoaded, &player, &SpotifyPlayer::refresh);

@@ -394,6 +394,17 @@ void SpotifyBrowser::fetchAddedPlaylistName(const QString &id)
     });
 }
 
+void SpotifyBrowser::moveAddedPlaylist(int from, int to)
+{
+    if (from == to || from < 0 || to < 0 || from >= m_added.count() || to >= m_added.count())
+        return;
+
+    m_added.move(from, to);
+    saveAddedPlaylists();
+    emit addedPlaylistsChanged();
+    refreshHome();
+}
+
 QVariantList SpotifyBrowser::addedItems() const
 {
     QVariantList items;

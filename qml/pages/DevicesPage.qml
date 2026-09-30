@@ -57,6 +57,16 @@ Page {
                 onClicked: librespot.enabled = !librespot.enabled
             }
 
+            TextSwitch {
+                visible: librespot.available
+                text: qsTr("Make this phone the default")
+                description: qsTr("Playback moves to \"%1\" when Wave starts, unless "
+                                  + "something is already playing elsewhere").arg(librespot.deviceName)
+                checked: librespot.playHereByDefault
+                automaticCheck: false
+                onClicked: librespot.playHereByDefault = !librespot.playHereByDefault
+            }
+
             Button {
                 visible: librespot.state === Librespot.NeedsLogin
                 anchors.horizontalCenter: parent.horizontalCenter

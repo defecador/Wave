@@ -8,10 +8,12 @@
 
 namespace {
 
-// Sailjail only lets Wave own the name derived from wave.desktop.
-const char *const ServiceName = "io.github.wave.wave";
-const char *const ObjectPath = "/io/github/wave";
-const char *const InterfaceName = "io.github.wave.Wave";
+// Sailjail only lets Wave own a bus name built from OrganizationName and
+// ApplicationName in harbour-wave.desktop -- both "harbour-wave" now.
+// (D-Bus object/interface names can't contain "-", hence the underscore.)
+const char *const ServiceName = "harbour-wave.harbour-wave";
+const char *const ObjectPath = "/harbour_wave";
+const char *const InterfaceName = "harbour_wave.Wave";
 
 } // namespace
 

@@ -187,14 +187,21 @@ void SpotifyPlayer::transferTo(const QString &deviceId)
     });
 }
 
-void SpotifyPlayer::transferToDeviceNamed(const QString &name, int attempts)
+void SpotifyPlayer::transferToDeviceNamed(const QString &name, int attempts, bool onlyIfIdle)
 {
-    m_api->get(QStringLiteral("/me/player/devices"), [this, name, attempts](int status, const QByteArray &data) {
+    m_api->get(QStringLiteral("/me/player/devices"), [this, name, attempts, onlyIfIdle](int status, const QByteArray &data) {
         if (status != 200)
             return;
         applyDevices(data);
 
         const QVariantList devices = m_devices;
+        for (const QVariant &value : devices) {
+            const QVariantMap device = value.toMap();
+            if (onlyIfIdle && device.value("active").toBool()
+                    && device.value("name").toString() != name) {
+                return;
+            }
+        }
         for (const QVariant &value : devices) {
             const QVariantMap device = value.toMap();
             if (device.value("name").toString() == name && !device.value("restricted").toBool()) {
@@ -205,8 +212,8 @@ void SpotifyPlayer::transferToDeviceNamed(const QString &name, int attempts)
 
         // A receiver that has just logged in takes a few seconds to show up.
         if (attempts > 1) {
-            QTimer::singleShot(2000, this, [this, name, attempts]() {
-                transferToDeviceNamed(name, attempts - 1);
+            QTimer::singleShot(2000, this, [this, name, attempts, onlyIfIdle]() {
+                transferToDeviceNamed(name, attempts - 1, onlyIfIdle);
             });
         } else {
             emit errorOccurred(tr("\"%1\" did not show up in your Spotify devices.").arg(name));

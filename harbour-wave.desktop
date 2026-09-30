@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 X-Nemo-Application-Type=silica-qt5
-Icon=wave
-Exec=wave
+Icon=harbour-wave
+Exec=harbour-wave
 Name=Wave
 # Wave can keep running without a window while it plays on the phone. The
 # launcher's single-instance check would only try to raise that missing window,
@@ -11,6 +11,9 @@ X-Nemo-Single-Instance=no
 
 [X-Sailjail]
 # Must match setOrganizationName()/setApplicationName() in src/main.cpp.
-OrganizationName=io.github.wave
-ApplicationName=wave
+# The "harbour-" prefix is required for OpenRepos/Chum-style app ids, and keeps
+# this package from colliding with an unrelated "wave" package in the repos --
+# which is what silently replaced Wave on one user's phone during a system update.
+OrganizationName=harbour-wave
+ApplicationName=harbour-wave
 Permissions=Internet;Audio

@@ -11,7 +11,7 @@
 class AppService : public QObject
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "io.github.wave.Wave")
+    Q_CLASSINFO("D-Bus Interface", "harbour_wave.Wave")
 
 public:
     explicit AppService(QObject *parent = nullptr);

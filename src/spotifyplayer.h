@@ -84,7 +84,10 @@ public:
     Q_INVOKABLE void toggleSaved();
     Q_INVOKABLE void transferTo(const QString &deviceId);
     // Waits for a device to appear in the device list, then moves playback to it.
-    Q_INVOKABLE void transferToDeviceNamed(const QString &name, int attempts = 5);
+    // With onlyIfIdle, playback only moves when no other device is playing, so
+    // starting Wave never snatches the music off a computer or a speaker.
+    Q_INVOKABLE void transferToDeviceNamed(const QString &name, int attempts = 5,
+                                           bool onlyIfIdle = false);
     // Plays a playlist or album, optionally starting at one of its tracks.
     Q_INVOKABLE void playContext(const QString &contextUri, const QString &trackUri = QString());
     // Plays loose tracks, e.g. liked songs or search results.

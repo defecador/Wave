@@ -21,7 +21,7 @@ Page {
 
             Image {
                 anchors.horizontalCenter: parent.horizontalCenter
-                source: "/usr/share/icons/hicolor/172x172/apps/wave.png"
+                source: "/usr/share/icons/hicolor/172x172/apps/harbour-wave.png"
                 width: Theme.iconSizeLarge
                 height: width
                 asynchronous: true

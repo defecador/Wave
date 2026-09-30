@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-TARGET = wave
+TARGET = harbour-wave
 
 CONFIG += sailfishapp c++11
 
-isEmpty(VERSION): VERSION = 0.2.6
+isEmpty(VERSION): VERSION = 0.2.7
 
 # The version reaches the code through a generated header rather than a define,
 # so that changing it recompiles what uses it. A define lives in the Makefile,
@@ -38,7 +38,7 @@ HEADERS += \
     src/spotifyplayer.h
 
 DISTFILES += \
-    qml/wave.qml \
+    qml/harbour-wave.qml \
     qml/cover/CoverPage.qml \
     qml/pages/AboutPage.qml \
     qml/pages/AccountPage.qml \
@@ -48,9 +48,9 @@ DISTFILES += \
     qml/pages/MadeForYouPage.qml \
     qml/pages/PlayerPage.qml \
     qml/pages/TrackListPage.qml \
-    rpm/wave.spec \
+    rpm/harbour-wave.spec \
     scripts/build-librespot.sh \
-    wave.desktop
+    harbour-wave.desktop
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 

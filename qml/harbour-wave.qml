@@ -29,9 +29,9 @@ ApplicationWindow {
     MprisPlayer {
         id: mprisPlayer
 
-        serviceName: "wave"
+        serviceName: "harbour-wave"
         identity: "Wave"
-        desktopEntry: "wave"
+        desktopEntry: "harbour-wave"
 
         // MPRIS clients read CanControl once and don't expect it to change, so keep
         // it true and enable the individual actions instead.

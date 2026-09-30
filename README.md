@@ -105,6 +105,12 @@ Wave is built as a remote control only.
 
 ### Wave
 
+The package is named `harbour-wave` (not just `wave`), the convention for
+independently distributed Sailfish apps -- it keeps the RPM, the binary and
+the Sailjail sandbox from colliding with an unrelated package that also
+happened to be called `wave` in some repos, which is what silently replaced
+this app on one user's phone during a system update.
+
 Use a separate build directory:
 
 ```bash
@@ -155,7 +161,7 @@ cd /path/to/Wave/build && mb2 -t SailfishOS-5.1.0.11EA-aarch64 build ..
 - [x] Browse library and playlists, search (first 50 items per list; Spotify
       returns at most 10 search results of each kind in development mode)
 - [ ] Store tokens in Sailfish Secrets. For now, the refresh token is kept in
-      `~/.config/io.github.wave/wave/wave.conf`, readable by your user.
+      `~/.config/harbour-wave/harbour-wave/harbour-wave.conf`, readable by your user.
 
 ## Related projects
 
