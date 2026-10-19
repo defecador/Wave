@@ -32,6 +32,17 @@ QString cacheDir()
     const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
             + QStringLiteral("/librespot");
     QDir().mkpath(dir);
+
+    // Before the package was renamed harbour-wave this lived under
+    // io.github.wave/wave. Carry the login (and volume) over once, or the
+    // receiver would ask for a new login and never show up as a device.
+    const QString legacy = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
+            + QStringLiteral("/io.github.wave/wave/librespot");
+    if (!QFile::exists(dir + QStringLiteral("/credentials.json"))
+            && QFile::exists(legacy + QStringLiteral("/credentials.json"))) {
+        for (const QString &name : { QStringLiteral("credentials.json"), QStringLiteral("volume") })
+            QFile::copy(legacy + QLatin1Char('/') + name, dir + QLatin1Char('/') + name);
+    }
     return dir;
 }
 

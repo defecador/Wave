@@ -4,7 +4,7 @@ TARGET = harbour-wave
 
 CONFIG += sailfishapp c++11
 
-isEmpty(VERSION): VERSION = 0.2.7
+isEmpty(VERSION): VERSION = 0.2.8
 
 # The version reaches the code through a generated header rather than a define,
 # so that changing it recompiles what uses it. A define lives in the Makefile,
